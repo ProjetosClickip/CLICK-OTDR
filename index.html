@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Academia OTDR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: lúdico e encorajador, como um instrutor de campo paciente; cada tela ensina uma coisa.
+   IDEA: um "treinamento por fases" com a cara do material Click IP (navy, laranja, teal).
+   PICTURE: o traço do OTDR sendo desenhado ao vivo, com eventos clicáveis e desafio de localizar o rompimento.
+   COLOUR and TYPE: navy #0B2149 dominante, teal #2F8A97 de apoio, laranja #FF5A1F como acento; Lilita One + Nunito.
+   LAYOUT: cabeçalho navy com XP, fileira de fases, uma fase por vez em painel largo; empilha abaixo de 600px. */
+:root{color-scheme:light dark;
+ --bg:light-dark(#FAF8F4,#071430);--card:light-dark(#ffffff,#0f2148);--ink:light-dark(#0B2149,#F2F0EA);
+ --soft:light-dark(#4a5672,#b7c0d6);--line:light-dark(#e3e0d8,#24386a);
+ --navy:#0B2149;--orange:#FF5A1F;--teal:#2F8A97;--peach:#F9B48A;--good:#1f9d6b;--warn:#e0a100;--bad:#d93a2b;
+ --trace:light-dark(#0B2149,#9fd3db);--grid:light-dark(#ece9e2,#1b2f5c)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Nunito,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Lilita One",Nunito,sans-serif;font-weight:400;line-height:1.05;margin:0;text-wrap:balance}
+h2{font-size:clamp(30px,4vw,44px);color:var(--orange)}
+h3{font-size:22px;color:var(--teal)}
+p{margin:.5em 0;max-width:70ch}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.band{padding:clamp(24px,4vw,56px) max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+header{background:var(--navy);color:#fff;position:relative;overflow:hidden}
+header::after{content:"";position:absolute;right:-60px;top:-40px;width:420px;height:260px;background:var(--teal);transform:skewX(-30deg);opacity:.9}
+header::before{content:"";position:absolute;right:30px;top:24px;width:150px;height:110px;z-index:1;background-image:radial-gradient(#fff 2.5px,transparent 3px);background-size:24px 24px}
+.hd{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end;justify-content:space-between}
+header h1{font-size:clamp(38px,6vw,64px);color:var(--orange)}
+header .sub{color:#d9def0;margin-top:6px}
+.xp{background:rgba(255,255,255,.1);border-radius:16px;padding:14px 18px;min-width:260px}
+.xp b{font-family:"Lilita One",Nunito,sans-serif;font-size:22px;color:var(--peach);font-weight:400}
+.bar{height:12px;background:rgba(255,255,255,.18);border-radius:8px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--peach));transition:width .6s}
+.badges{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.badges span{font-size:12px;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.12);color:#c8cfe4}
+.badges span.on{background:var(--orange);color:#fff}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;flex-wrap:wrap;gap:6px;padding:10px max(5vw,16px)}
+nav a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:800;padding:9px 14px;border-radius:12px;min-height:44px;border:2px solid transparent}
+nav a .n{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--line);font-size:13px}
+nav a.done .n{background:var(--good);color:#fff}
+nav a[aria-current=page]{border-color:var(--orange);color:var(--orange)}
+section.fase{display:none}section.fase.on{display:block}
+.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+.lead{font-size:18px;color:var(--soft)}
+.btn{background:var(--orange);color:#fff;border:0;border-radius:12px;padding:11px 20px;font-weight:800;min-height:44px}
+.btn.alt{background:var(--teal)}.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.fig{position:relative;min-height:300px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+label.ck{display:flex;gap:8px;align-items:center;padding:8px 12px;border:2px solid var(--line);border-radius:12px;min-height:44px;font-weight:700;cursor:pointer}
+label.ck input{width:18px;height:18px;accent-color:var(--orange)}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--ink);padding:9px 14px;font-weight:800;min-height:40px}
+.seg button.on{background:var(--navy);color:#fff}
+:root:not([data-theme=light]) .seg button.on{background:light-dark(var(--navy),var(--teal))}
+input[type=range]{width:100%;accent-color:var(--orange);height:28px}
+select,input[type=number]{font:inherit;font-size:16px;padding:8px 10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);min-height:44px;width:100%}
+.big{font-family:"Lilita One",Nunito,sans-serif;font-weight:400;font-size:clamp(36px,6vw,56px);line-height:1;white-space:nowrap}
+.tip{border-left:5px solid var(--teal);background:light-dark(#eaf4f5,#0e2d45);padding:12px 16px;border-radius:0 12px 12px 0;margin:14px 0}
+.tip.o{border-color:var(--orange);background:light-dark(#fff1ea,#3a1f1a)}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:13px;color:var(--soft)}
+td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tr.ev{cursor:pointer}tr.ev:hover{background:light-dark(#f3f1ec,#16295a)}
+.msg{font-weight:800;min-height:1.5em}
+.ok{color:var(--good)}.no{color:var(--bad)}
+.home{background:#3c3f45;border-radius:16px;padding:14px;color:#fff;border:6px solid #23262b}
+.home .top{display:flex;justify-content:space-between;font-size:13px;color:#cfd2d8;margin-bottom:10px}
+.icons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.ic{background:transparent;border:2px solid transparent;border-radius:12px;color:#fff;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;font-weight:800;text-transform:uppercase;line-height:1.15;min-height:88px}
+.ic svg{width:44px;height:44px;border-radius:8px}
+.ic.on,.ic:hover{border-color:var(--orange);background:rgba(255,255,255,.07)}
+.ic.seen::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--good)}
+.hr{height:1px;background:#5a5e66;margin:10px 0}
+.q{font-size:20px;font-weight:800;margin:6px 0 14px}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:12px 16px;font-weight:700;min-height:48px}
+.opt.right{border-color:var(--good);background:light-dark(#e6f6ee,#0f3a2c)}
+.opt.wrong{border-color:var(--bad);background:light-dark(#fdeceb,#3d1715)}
+.scn{display:grid;gap:10px}
+.port{cursor:pointer}
+.port:hover rect.body,.port.on rect.body{stroke:var(--orange);stroke-width:4}
+.meter{height:18px;border-radius:10px;background:linear-gradient(90deg,var(--bad) 0 22%,var(--warn) 22% 34%,var(--good) 34% 82%,var(--warn) 82%);position:relative;margin:26px 0 6px}
+.meter i{position:absolute;top:-8px;width:4px;height:34px;background:var(--ink);border-radius:2px;transition:left .4s}
+.meter i.b{background:var(--teal)}
+.scale{display:flex;justify-content:space-between;font-size:13px;color:var(--soft)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:6px 14px;font-weight:800;min-height:40px}
+.chip.on{border-color:var(--orange);color:var(--orange)}
+.small{font-size:13px;color:var(--soft)}
+.pop{animation:pop .5s}
+@keyframes pop{50%{transform:scale(1.06)}}
+.evgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px;margin-top:18px}
+.evc{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.evc h3{font-size:20px}
+.mini{width:100%;height:auto;display:block;border-radius:10px;background:light-dark(#f4f2ec,#0a1a3c)}
+.evc dl{margin:0;font-size:15px}.evc dt{font-weight:800;margin-top:6px}.evc dd{margin:0;color:var(--soft)}
+.reft{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:14px}
+.reft table{font-size:14px}.reft caption{text-align:left;font-weight:800;color:var(--teal);padding-bottom:4px}
+.lnk{color:var(--orange);font-weight:800}
+.logobox{display:inline-block;background:#fff;border-radius:14px;padding:8px 16px;margin-bottom:16px}.logo{height:clamp(34px,5vw,46px);width:auto;display:block}
+.cert{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.certfig{position:relative;width:100%;aspect-ratio:297/210;border-radius:10px;overflow:hidden;box-shadow:0 10px 30px rgba(11,33,73,.18);background:#FBFAF6}
+.certfig canvas{position:absolute;inset:0;width:100%;height:100%}
+.req{display:grid;gap:8px;margin:10px 0}
+.req div{display:flex;gap:10px;align-items:center;font-weight:700}
+.req i{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--line);font-style:normal;font-size:13px;flex:none}
+.req .ok i{background:var(--good);color:#fff}
+input[type=text]{font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);min-height:44px;width:100%}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}.icons{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){header::after,header::before{display:none}nav .wrap{flex-wrap:nowrap;overflow-x:auto}nav a{flex:none}table{font-size:13px}}
+</style>
+</head>
+<body>
+<header class="band"><div class="wrap hd">
+ <div><span class="logobox"><img class="logo" alt="Click IP" src="data:image/png;base64,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"></span><h1>Academia OTDR</h1><div class="sub">Aprenda o OTDR jogando — baseado no material “Conhecendo o OTDR” da Engenharia/Projetos Click IP.</div></div>
+ <div class="xp"><div class="row" style="justify-content:space-between"><span>Seu XP</span><b id="xpv">0 / 700</b></div><div class="bar"><i id="xpb"></i></div><div class="badges" id="badges"></div></div>
+</div></header>
+
+<img id="logoN" alt="" hidden src="data:image/png;base64,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">
+<nav><div class="wrap" id="nav"></div></nav>
+
+<main>
+<!-- FASE 1 -->
+<section class="fase band" id="eco"><div class="wrap">
+ <h2>O OTDR funciona como um eco</h2>
+ <p class="lead">OTDR significa <b>Optical Time Domain Reflectometer</b> — reflectômetro óptico no domínio do tempo. É o equipamento usado para <b>certificar</b> a rede que foi ou será implantada.</p>
+ <div class="grid2" style="margin-top:18px">
+  <div class="card">
+   <h3>1. Grite na montanha</h3>
+   <div class="fig" style="min-height:220px"><svg id="ecoSvg"></svg></div>
+   <div class="row"><button class="btn" id="gritar">Gritar “ALÔÔÔ!”</button><span class="msg" id="ecoMsg"></span></div>
+   <label class="small" for="dM">Distância até a montanha: <b id="dMv">500 m</b></label>
+   <input type="range" id="dM" min="100" max="1500" step="50" value="500">
+  </div>
+  <div class="card">
+   <h3>2. Agora com luz na fibra</h3>
+   <div class="fig" style="min-height:150px"><svg id="fibSvg"></svg></div>
+   <div class="row"><button class="btn alt" id="disparar">Disparar pulso de laser</button><span class="msg" id="fibMsg"></span></div>
+   <label class="small" for="dF">Comprimento da fibra: <b id="dFv">10 km</b></label>
+   <input type="range" id="dF" min="1" max="60" value="10">
+  </div>
+ </div>
+ <div class="grid2" style="margin-top:22px">
+  <div>
+   <div class="tip"><b>A ideia é a mesma:</b> o som bate na montanha e volta; pelo tempo que o eco demora você sabe onde está a parede. O OTDR envia um <b>pulso de luz</b> pela fibra e uma pequena parte dessa luz volta ao equipamento. Medindo o tempo de ida e volta, ele calcula <b>onde</b> está cada emenda, conector, perda ou rompimento.</div>
+   <p><b>Conta que o OTDR faz por você:</b> distância = (velocidade da luz na fibra × tempo) ÷ 2. Divide por 2 porque a luz vai <i>e volta</i>. Na fibra a luz anda a cerca de 204 mil km/s (mais devagar que no ar, por causa do índice de refração do vidro, ≈ 1,468).</p>
+  </div>
+  <div class="card">
+   <h3>Dois tipos de “eco” na fibra</h3>
+   <p><b>Retroespalhamento (Rayleigh):</b> um pouquinho de luz volta de todos os pontos do vidro. É isso que desenha a linha inclinada do traço — quanto mais inclinada, mais a fibra atenua.</p>
+   <p><b>Reflexão (Fresnel):</b> um “grito” forte que volta quando a luz encontra ar ou vidro diferente — conectores e pontas quebradas. Aparece como um <b>pico</b> no traço.</p>
+   <button class="btn ghost" data-done="eco">Entendi! Ganhar 100 XP</button>
+  </div>
+ </div>
+</div></section>
+
+<!-- FASE: ler eventos -->
+<section class="fase band" id="eventos"><div class="wrap">
+ <h2>Como ler os eventos do teste</h2>
+ <p class="lead">Todo teste de OTDR entrega um <b>gráfico (o traço)</b> e uma <b>tabela de eventos</b>. No traço, a linha horizontal é a distância (km) e a vertical é o nível do sinal (dB): quanto mais para baixo, mais luz já se perdeu. Cada problema da rede deixa um “desenho” diferente — aprenda a reconhecer cada um.</p>
+ <div class="grid2" style="margin-top:18px">
+  <div class="card">
+   <h3>Os dois jeitos de um evento aparecer</h3>
+   <svg class="mini" viewBox="0 0 200 90" style="margin:10px 0" role="img" aria-label="Exemplo: degrau de perda e pico de reflexão">
+    <polyline points="8,24 70,32 70,40 120,46 121,14 126,58 192,66" fill="none" stroke="var(--trace)" stroke-width="2"/>
+    <text x="52" y="56" font-size="9" fill="#2F8A97" font-weight="800">degrau = perda</text>
+    <text x="128" y="16" font-size="9" fill="#FF5A1F" font-weight="800">pico = reflexão</text>
+   </svg>
+   <p><b>Não reflexivo:</b> só um <b>degrau para baixo</b>. A altura do degrau é a <b>perda</b> (em dB) naquele ponto. Ex.: fusão, curvatura, splitter.</p>
+   <p><b>Reflexivo:</b> um <b>pico para cima</b> e depois o degrau. O pico é luz que “bateu e voltou” (reflexão), como num espelho. Ex.: conector, emenda mecânica, fim da fibra e rompimento.</p>
+   <div class="tip"><b>Refletância</b> mede a força desse pico, em dB negativo: quanto <b>mais perto de zero</b>, <b>mais reflexão</b> (pior). O conector <b>APC</b> (verde, ponta angulada) reflete bem menos que o UPC (azul) — por isso o APC é o padrão nas redes PON. Valores típicos: APC melhor que −60 dB; UPC em torno de −50 dB.</div>
+  </div>
+  <div class="card">
+   <h3>Entendendo a tabela de eventos</h3>
+   <table class="stack"><thead><tr><th>Coluna</th><th>O que significa</th></tr></thead><tbody>
+    <tr><td><b>Nº / Tipo</b></td><td>Número do evento e o ícone do tipo (reflexivo ou não).</td></tr>
+    <tr><td><b>Distância</b></td><td>Onde está o evento, medido a partir do OTDR.</td></tr>
+    <tr><td><b>Perda (dB)</b></td><td>Altura do degrau: quanto sinal sumiu naquele ponto.</td></tr>
+    <tr><td><b>Refletância (dB)</b></td><td>Força do pico. Só aparece em eventos reflexivos.</td></tr>
+    <tr><td><b>Atenuação (dB/km)</b></td><td>Inclinação do trecho de fibra entre dois eventos.</td></tr>
+    <tr><td><b>Perda total</b></td><td>Soma de tudo, do início até aquele ponto ou até o fim do enlace.</td></tr>
+   </tbody></table>
+  </div>
+ </div>
+ <div class="evgrid" id="evCards"></div>
+ <div class="card" style="margin-top:22px;max-width:820px"><h3>Jogo: qual é o evento?</h3><p class="small">Olhe o desenho do traço e diga o que é. Acerte 4 de 6 para concluir a fase.</p><div id="evGame"></div></div>
+</div></section>
+
+<!-- FASE 2 -->
+<section class="fase band" id="simulador"><div class="wrap">
+ <h2>Simulador de traço OTDR</h2>
+ <p class="lead">Ligue e desligue os eventos da rede, escolha o comprimento de onda e dispare. Clique nos marcadores numerados do gráfico para entender cada evento.</p>
+ <div class="card" style="margin-top:14px">
+  <div class="row" style="justify-content:space-between">
+   <div class="row" id="evChecks"></div>
+  </div>
+  <div class="row" style="margin-top:10px">
+   <span class="small">Comprimento de onda</span><div class="seg" id="lamSeg"><button class="on" data-v="1310">1310 nm</button><button data-v="1550">1550 nm</button></div>
+   <span class="small">Largura do pulso</span><div class="seg" id="pwSeg"><button data-v="0">10 ns</button><button class="on" data-v="1">100 ns</button><button data-v="2">1 µs</button></div>
+  </div>
+  <div class="fig" style="min-height:360px;margin-top:12px"><svg id="trace" role="img" aria-label="Traço do OTDR: potência em dB pela distância em km"></svg></div>
+  <div class="row"><button class="btn" id="fire">Disparar teste</button><button class="btn alt" id="chal">Desafio: ache o rompimento</button><span class="msg" id="simMsg"></span></div>
+ </div>
+ <div class="grid2" style="margin-top:22px">
+  <div class="card"><h3>Tabela de eventos</h3><p class="small">Como o OTDR mostra depois do teste. Clique numa linha.</p>
+   <div class="scroll"><table><thead><tr><th>#</th><th>Evento</th><th class="num">Distância</th><th class="num">Perda</th><th>Tipo</th></tr></thead><tbody id="evTb"></tbody></table></div></div>
+  <div class="card" id="evInfo"><h3>Leia o traço</h3>
+   <p><b>Linha descendo devagar:</b> a própria fibra atenuando (dB/km).</p>
+   <p><b>Degrau para baixo:</b> perda num ponto (fusão, curvatura).</p>
+   <p><b>Pico + degrau:</b> evento reflexivo (conector).</p>
+   <p><b>Pico grande e depois ruído:</b> fim da fibra ou rompimento.</p>
+   <div class="tip o">Experimente o <b>1550 nm</b> com a curvatura ligada: a perda da dobra aumenta. Curvaturas são muito mais sensíveis em 1550 nm — por isso comparar os dois comprimentos ajuda a achar dobras.</div>
+  </div>
+ </div>
+</div></section>
+
+<!-- FASE 3 -->
+<section class="fase band" id="potencia"><div class="wrap">
+ <h2>Cálculo de potência</h2>
+ <p class="lead">Some todas as perdas do passivo da rede, da OLT até a ONU do cliente. Use os valores da tabela de atenuação do material.</p>
+ <div class="grid2" style="margin-top:14px">
+  <div class="card">
+   <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+    <label>Classe do laser da OLT<select id="pOlt"><option value="1.5,5">B+ (+1,5 a +5 dBm)</option><option value="3,7">C+ (+3 a +7 dBm)</option><option value="5,10">C++ (+5 a +10 dBm)</option></select></label>
+    <label>Comprimento de onda<select id="pLam"><option value="0.35">1310 nm — 0,35 dB/km</option><option value="0.25" selected>1490 nm — 0,25 dB/km</option><option value="0.20">1550 nm — 0,20 dB/km</option></select></label>
+    <label>Distância da fibra (km)<input type="number" id="pKm" min="0" max="60" step="0.1" value="5"></label>
+    <label>Conectores (0,15 a 0,5 dB)<input type="number" id="pCon" min="0" max="20" value="4"></label>
+    <label>Fusões (0,02 a 0,1 dB)<input type="number" id="pFus" min="0" max="60" value="6"></label>
+    <label>Emendas mecânicas (0,1 a 0,3 dB)<input type="number" id="pMec" min="0" max="20" value="0"></label>
+   </div>
+   <p style="margin-top:14px"><b>Splitters no caminho</b> <span class="small">(toque para adicionar; toque no item adicionado para remover)</span></p>
+   <div class="chips" id="spAdd"></div>
+   <div class="chips" id="spList" style="margin-top:8px"></div>
+  </div>
+  <div class="card">
+   <p class="small">Sinal que chega na ONU do cliente</p>
+   <div class="big" id="pRes">–</div>
+   <div class="small" id="pRange"></div>
+   <div class="meter"><i id="mW"></i><i class="b" id="mB"></i></div>
+   <div class="scale"><span>−32</span><span>−27</span><span>−25</span><span>−8</span><span>0 dBm</span></div>
+   <p class="msg" id="pStat"></p>
+   <table style="margin-top:8px"><tbody id="pTb"></tbody></table>
+   <p class="small">Faixas de cor: referência usual de campo para GPON (bom entre −8 e −25 dBm; atenção até −27; abaixo disso, crítico). Confirme sempre com a sensibilidade da ONU usada.</p>
+  </div>
+ </div>
+ <div class="card" style="margin-top:20px"><h3>Tabela de atenuação de passivo</h3><p class="small">Valores do material “Conhecendo o OTDR”. São eles que o calculador usa.</p>
+  <div class="reft">
+   <table><caption>Laser da OLT</caption><tbody><tr><td>B+</td><td class="num">+1,5 a +5 dBm</td></tr><tr><td>C+</td><td class="num">+3 a +7 dBm</td></tr><tr><td>C++</td><td class="num">+5 a +10 dBm</td></tr></tbody></table>
+   <table><caption>Fibra óptica (atenuação)</caption><tbody><tr><td>1310 nm</td><td class="num">0,35 dB/km</td></tr><tr><td>1490 nm</td><td class="num">0,25 dB/km</td></tr><tr><td>1550 nm</td><td class="num">0,20 dB/km</td></tr></tbody></table>
+   <table><caption>Splitter (perda)</caption><tbody><tr><td>1:2</td><td class="num">3,7 dB</td></tr><tr><td>1:4</td><td class="num">7,3 dB</td></tr><tr><td>1:8</td><td class="num">10,5 dB</td></tr><tr><td>1:16</td><td class="num">13,7 dB</td></tr><tr><td>1:32</td><td class="num">17,1 dB</td></tr><tr><td>1:64</td><td class="num">20,5 dB</td></tr></tbody></table>
+   <table><caption>Conector e emendas (perda)</caption><tbody><tr><td>Conector</td><td class="num">0,15 a 0,5 dB</td></tr><tr><td>Fusão</td><td class="num">0,02 a 0,1 dB</td></tr><tr><td>Mecânica</td><td class="num">0,1 a 0,3 dB</td></tr></tbody></table>
+  </div></div>
+ <div class="tip" style="margin-top:20px"><b>Por que calcular antes?</b> O OTDR e o medidor de potência confirmam em campo se a rede ficou dentro do que foi projetado. Se o valor medido for bem pior que o calculado, há algo errado: conector sujo, fusão ruim ou curvatura.</div>
+ <button class="btn ghost" data-done="potencia">Já sei calcular! Ganhar 100 XP</button>
+</div></section>
+
+<!-- FASE 4 -->
+<section class="fase band" id="tela"><div class="wrap">
+ <h2>Conhecendo a tela do SmartOTDR</h2>
+ <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));margin:14px 0 22px">
+  <div class="card"><h3>Cálculo de potência</h3><p>Mapeia atenuação e potência na rede que será ou foi implantada, para certificar que está tudo conforme.</p></div>
+  <div class="card"><h3>Certificação de fibra</h3><p>Mapeia o cabo e acha falhas de forma automática (Smart Test), manual (OTDR Expert) ou específica para FTTH. Guarda a curva e gera o relatório que comprova a qualidade do enlace.</p></div>
+  <div class="card"><h3>Nuvem e suporte</h3><p>Organiza os relatórios (Explorador), envia para a nuvem (StrataSync) e permite suporte remoto (SmartAccess).</p></div>
+ </div>
+ <p class="lead">A tela Início (Home) reúne todas as ferramentas. Toque em cada ícone para descobrir o que ele faz — abra os 12 para completar a fase.</p>
+ <div class="grid2" style="margin-top:14px">
+  <div class="home">
+   <div class="top"><span>Início</span><span>16:20 · <span id="seenC">0</span>/12 explorados</span></div>
+   <div class="icons" id="icons1"></div>
+   <div class="hr"></div>
+   <div class="icons" id="icons2"></div>
+  </div>
+  <div class="card" id="icInfo"><h3>Escolha um ícone</h3><p>A linha de cima são as <b>funções do aparelho</b> (arquivos, configurações, nuvem). A linha de baixo são as <b>funções de teste</b>.</p></div>
+ </div>
+</div></section>
+
+<!-- FASE 5 -->
+<section class="fase band" id="portas"><div class="wrap">
+ <h2>As portas do OTDR</h2>
+ <p class="lead">Cada porta tem uma missão. Toque numa porta para conhecer, depois resolva as situações de campo.</p>
+ <div class="grid2" style="margin-top:14px">
+  <div class="card"><div class="fig" style="min-height:230px"><svg id="portSvg" viewBox="0 0 560 230"></svg></div><div id="portInfo"><p class="small">Toque numa porta acima.</p></div></div>
+  <div class="card"><h3>Qual porta você usaria?</h3><div id="scn"></div></div>
+ </div>
+</div></section>
+
+<!-- FASE 6 -->
+<section class="fase band" id="quiz"><div class="wrap">
+ <h2>Teste seu conhecimento</h2>
+ <div class="card" style="margin-top:14px;max-width:820px" id="quizBox"></div>
+ <div class="card" style="margin-top:22px" id="certBox">
+  <h3>Seu certificado</h3>
+  <div id="certLock"></div>
+  <div id="certOpen" hidden>
+   <p>Parabéns! Você concluiu todas as fases e foi aprovado na avaliação. Digite seu nome completo como deve aparecer no certificado.</p>
+   <div class="row" style="align-items:flex-end"><label style="flex:1 1 280px">Nome completo<input type="text" id="certName" maxlength="60" autocomplete="name" placeholder="Ex.: Maria da Silva Souza"></label>
+    <button class="btn" id="certPdf" disabled>Baixar certificado em PDF</button></div>
+   <p class="msg" id="certMsg"></p>
+   <div class="certfig" style="margin-top:8px"><canvas id="certCv" role="img" aria-label="Pré-visualização do certificado"></canvas></div>
+   <p class="small">O PDF sai em A4 deitado, pronto para imprimir: abra o arquivo e use Ctrl+P (ou Imprimir no celular).</p>
+  </div>
+ </div>
+</div></section>
+</main>
+
+<footer class="band" style="background:var(--navy);color:#c8cfe4"><div class="wrap small" style="color:#c8cfe4"><span class="logobox" style="margin-bottom:12px"><img alt="Click IP" style="height:30px;width:auto;display:block" src="data:image/png;base64,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"></span>Conteúdo base: “Conhecendo o OTDR — Planejamento de Projetos”, Click IP. Elaboração: Gilmar Santos (Assistente de Projetos). Revisão e aprovação: Gabriela Flores (Supervisora de Projetos). Valores do simulador são didáticos.</div></footer>
+
+<script>
+{
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const fmt=(n,d=1)=>n.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const NS='http://www.w3.org/2000/svg';
+/* ---------- progresso ---------- */
+const FASES=[['eco','O eco'],['eventos','Ler eventos'],['simulador','Simulador'],['potencia','Potência'],['tela','A tela'],['portas','Portas'],['quiz','Quiz']];
+let st={done:{},xp:0};
+try{st=Object.assign(st,JSON.parse(localStorage.getItem('otdrAcad')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('otdrAcad',JSON.stringify(st))}catch(e){}};
+function award(id){if(st.done[id])return;st.done[id]=1;st.xp=Math.min(700,st.xp+100);save();renderXP();const b=$('#xpv');b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop')}
+function renderXP(){
+ $('#xpv').textContent=st.xp+' / 700';$('#xpb').style.width=(st.xp/7)+'%';
+ const lv=['Aprendiz','Ajudante de campo','Auxiliar técnico','Técnico júnior','Técnico','Técnico pleno','Especialista','Mestre do OTDR'];
+ $('#badges').innerHTML='<span class="on">'+lv[Object.keys(st.done).length]+'</span>'+FASES.map(f=>'<span class="'+(st.done[f[0]]?'on':'')+'">'+f[1]+'</span>').join('');
+ $('#nav').innerHTML=FASES.map((f,i)=>'<a href="#'+f[0]+'" class="'+(st.done[f[0]]?'done':'')+'"'+(cur===f[0]?' aria-current="page"':'')+'><span class="n">'+(st.done[f[0]]?'✓':i+1)+'</span><span class="t">'+f[1]+'</span></a>').join('');
+}
+let cur='eco';
+function route(){const h=location.hash.slice(1);cur=FASES.some(f=>f[0]===h)?h:'eco';$$('section.fase').forEach(s=>s.classList.toggle('on',s.id===cur));renderXP();
+ if(cur==='eco'){drawEco(0,0);drawFib(-1)} if(cur==='simulador')drawTrace();}
+window.addEventListener('hashchange',()=>{route();window.scrollTo({top:0})});
+$$('[data-done]').forEach(b=>b.addEventListener('click',()=>{award(b.dataset.done);b.textContent='Fase concluída ✓';b.disabled=true}));
+
+/* ---------- FASE 1: eco ---------- */
+const ecoS=$('#ecoSvg'),fibS=$('#fibSvg');
+function drawEco(p,dir){const W=ecoS.clientWidth,H=ecoS.clientHeight;if(!W)return;
+ const mx=W-185,px=60,gy=H-30;const x=dir===0?-99:(dir===1?px+30+(mx-px-30)*p:mx-(mx-px-30)*p);
+ const arcs=dir?[0,1,2].map(k=>'<path d="M'+(x-k*10)+' '+(gy-80)+' q'+(dir===1?12:-12)+' 22 0 44" fill="none" stroke="'+(dir===1?'#FF5A1F':'#2F8A97')+'" stroke-width="4" stroke-linecap="round" opacity="'+(1-k*.3)+'"/>').join(''):'';
+ ecoS.innerHTML='<rect x="0" y="'+gy+'" width="'+W+'" height="30" fill="#2F8A97" opacity=".25"/>'+
+ '<polygon points="'+(mx-40)+','+gy+' '+(mx+60)+','+(gy-160)+' '+(mx+170)+','+gy+'" fill="#6b7a99"/><polygon points="'+(mx+60)+','+(gy-160)+' '+(mx+170)+','+gy+' '+(mx+90)+','+gy+'" fill="#4c5a78"/><polygon points="'+(mx+38)+','+(gy-126)+' '+(mx+60)+','+(gy-160)+' '+(mx+84)+','+(gy-124)+' '+(mx+62)+','+(gy-114)+'" fill="#fff"/>'+
+ '<circle cx="'+px+'" cy="'+(gy-92)+'" r="18" fill="#F9B48A"/><path d="M'+(px-14)+' '+(gy-96)+' q14 -24 28 0" fill="#0B2149"/><rect x="'+(px-16)+'" y="'+(gy-72)+'" width="32" height="44" rx="10" fill="#2F8A97"/><rect x="'+(px-12)+'" y="'+(gy-30)+'" width="10" height="30" fill="#0B2149"/><rect x="'+(px+2)+'" y="'+(gy-30)+'" width="10" height="30" fill="#0B2149"/>'+
+ '<ellipse cx="'+(px+8)+'" cy="'+(gy-84)+'" rx="5" ry="'+(dir===1?5:2)+'" fill="#0B2149"/>'+arcs+
+ '<text x="'+((px+mx)/2)+'" y="'+(gy+20)+'" text-anchor="middle" font-size="13" fill="#0B2149" font-weight="800">'+$('#dM').value+' m</text>'}
+function drawFib(p){const W=fibS.clientWidth,H=fibS.clientHeight;if(!W)return;const y=H/2,x0=74,x1=W-60;
+ let dot='';if(p>=0){const q=p<.5?p*2:2-p*2;const x=x0+(x1-x0)*q;dot='<circle cx="'+x+'" cy="'+y+'" r="9" fill="'+(p<.5?'#FF5A1F':'#2F8A97')+'"/><circle cx="'+x+'" cy="'+y+'" r="18" fill="'+(p<.5?'#FF5A1F':'#2F8A97')+'" opacity=".25"/>'}
+ fibS.innerHTML='<rect x="6" y="'+(y-34)+'" width="62" height="68" rx="10" fill="#0B2149"/><rect x="14" y="'+(y-24)+'" width="46" height="30" rx="4" fill="#9fd3db"/><path d="M18 '+(y-4)+' l10 -6 10 10 10 -14 8 4" stroke="#0B2149" stroke-width="2" fill="none"/><text x="37" y="'+(y+24)+'" text-anchor="middle" fill="#fff" font-size="11" font-weight="800">OTDR</text>'+
+ '<line x1="'+x0+'" y1="'+y+'" x2="'+x1+'" y2="'+y+'" stroke="#FFC400" stroke-width="6" stroke-linecap="round"/><rect x="'+x1+'" y="'+(y-28)+'" width="50" height="56" rx="6" fill="#4c5a78"/><text x="'+(x1+25)+'" y="'+(y+44)+'" text-anchor="middle" font-size="12" font-weight="800" fill="currentColor">DIO</text>'+dot}
+function anim(ms,fn,end){const t0=performance.now();const red=matchMedia('(prefers-reduced-motion: reduce)').matches;function f(t){const p=red?1:Math.min(1,(t-t0)/ms);fn(p);if(p<1)requestAnimationFrame(f);else end&&end()}requestAnimationFrame(f)}
+$('#dM').addEventListener('input',e=>{$('#dMv').textContent=e.target.value+' m';drawEco(0,0)});
+$('#dF').addEventListener('input',e=>{$('#dFv').textContent=e.target.value+' km';drawFib(-1)});
+$('#gritar').addEventListener('click',()=>{const d=+$('#dM').value,t=2*d/343;$('#ecoMsg').textContent='';
+ anim(1100,p=>drawEco(p,1),()=>anim(1100,p=>drawEco(p,-1),()=>{drawEco(0,0);$('#ecoMsg').textContent='O eco voltou em '+fmt(t,2)+' s → montanha a '+d+' m'}))});
+$('#disparar').addEventListener('click',()=>{const L=+$('#dF').value,t=2*L/204190*1e6;$('#fibMsg').textContent='';
+ anim(1600,p=>drawFib(p),()=>{drawFib(-1);$('#fibMsg').textContent='Luz voltou em '+fmt(t,1)+' µs → fibra com '+L+' km'})});
+new ResizeObserver(()=>{drawEco(0,0);drawFib(-1)}).observe(ecoS);new ResizeObserver(()=>drawFib(-1)).observe(fibS);
+
+/* ---------- FASE 2: simulador ---------- */
+const EV={
+ con:{n:'Conector',km:3,loss:0.5,refl:1,txt:'Conector (ex.: no DIO ou na CTO). Perda de 0,15 a 0,5 dB. Aparece como <b>pico</b> (reflexão) seguido de um degrau. Conector sujo aumenta a perda e a reflexão — sempre inspecione e limpe antes de testar.'},
+ fus:{n:'Fusão',km:6.5,loss:0.1,refl:0,txt:'Emenda por fusão. Perda de 0,02 a 0,1 dB. Não reflete: aparece só como um pequeno <b>degrau</b>. Fusão acima de 0,1 dB indica emenda malfeita — refaça.'},
+ cur:{n:'Curvatura',km:9.5,loss:0.25,refl:0,txt:'Curvatura/dobra excessiva no cabo. Degrau sem pico. Em 1550 nm a perda fica bem maior que em 1310 nm — essa diferença é a “assinatura” de uma dobra. Verifique raio de curvatura em caixas e reservas.'},
+ rom:{n:'Rompimento',km:12.3,loss:99,refl:1,txt:'Fibra rompida. Pico de reflexão e depois a linha cai no <b>ruído</b>: a luz não passa dali. A distância indicada é o ponto onde a equipe deve ir. Use o VFL em distâncias curtas para ver a luz vermelha vazando.'}};
+const on={con:1,fus:1,cur:1,rom:0};let lam=1310,pw=1,seed=7,prog=1,chal=null,sel=null;
+$('#evChecks').innerHTML=Object.keys(EV).map(k=>'<label class="ck"><input type="checkbox" data-k="'+k+'"'+(on[k]?' checked':'')+'>'+EV[k].n+'</label>').join('');
+$$('#evChecks input').forEach(c=>c.addEventListener('change',()=>{on[c.dataset.k]=c.checked?1:0;chal=null;prog=1;drawTrace()}));
+function seg(id,fn){$$(id+' button').forEach(b=>b.addEventListener('click',()=>{$$(id+' button').forEach(x=>x.classList.toggle('on',x===b));fn(b.dataset.v)}))}
+seg('#lamSeg',v=>{lam=+v;drawTrace()});seg('#pwSeg',v=>{pw=+v;drawTrace()});
+const LEN=15,XMAX=16;
+function events(){const a=lam===1310?0.35:0.2;const list=[];
+ const src=chal?chal.ev:Object.keys(EV).filter(k=>on[k]).map(k=>({k,km:EV[k].km}));
+ src.forEach(e=>{let loss=EV[e.k].loss;if(e.k==='cur'&&lam===1550)loss=1.1;list.push({k:e.k,km:e.km,loss,refl:EV[e.k].refl})});
+ list.sort((a,b)=>a.km-b.km);const br=list.findIndex(e=>e.k==='rom');const end=br>=0?list[br].km:LEN;
+ const out=br>=0?list.slice(0,br+1):list.concat([{k:'fim',km:LEN,loss:99,refl:1}]);
+ return{a,out:out.filter(e=>e.km<=end),end}}
+function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647}
+function series(){const {a,out,end}=events();const floor=[-9,-17,-27][pw],sw=[.05,.15,.4][pw];let s=seed;const pts=[];const N=420;
+ for(let i=0;i<=N;i++){const x=XMAX*i/N;let L=-0.6-a*Math.min(x,end);out.forEach(e=>{if(x>e.km+sw*.5&&e.loss<50)L-=e.loss});
+  if(x>end+sw)L=floor;let sp=0;out.forEach(e=>{if(e.refl){const d=x-e.km;if(d>=-.02&&d<sw)sp=Math.max(sp,(e.k==='con'?6:10)*(1-d/sw))}});
+  if(x<sw*1.4)sp=Math.max(sp,12*(1-x/(sw*1.4)));
+  const r=(rnd()+rnd()+rnd()-1.5);const nz=(0.04+2.2*Math.exp(-(L-floor)/1.6))*r;
+  pts.push([x,Math.max(floor-2.5,L+sp+nz)])}
+ return{pts,out,floor}}
+const tS=$('#trace');let lastS=null;
+function drawTrace(){const W=tS.clientWidth,H=tS.clientHeight;if(!W)return;const sm=W<520;
+ const ml=sm?34:46,mr=12,mt=14,mb=34,ymin=-30,ymax=13;const X=x=>ml+(W-ml-mr)*x/XMAX,Y=y=>mt+(H-mt-mb)*(ymax-y)/(ymax-ymin);
+ const save=seed;const S=series();seed=save;lastS=S;
+ let g='';for(let y=-30;y<=10;y+=10)g+='<line x1="'+ml+'" x2="'+(W-mr)+'" y1="'+Y(y)+'" y2="'+Y(y)+'" stroke="var(--grid)"/><text x="'+(ml-6)+'" y="'+(Y(y)+4)+'" text-anchor="end" font-size="12" fill="var(--soft)">'+y+'</text>';
+ for(let x=0;x<=XMAX;x+=sm?4:2)g+='<line y1="'+mt+'" y2="'+(H-mb)+'" x1="'+X(x)+'" x2="'+X(x)+'" stroke="var(--grid)"/><text x="'+X(x)+'" y="'+(H-mb+18)+'" text-anchor="'+(x===XMAX?'end':'middle')+'" font-size="12" fill="var(--soft)">'+x+(x===XMAX&&!sm?' km':'')+'</text>';
+ g+='<text x="'+(ml+4)+'" y="'+(mt+12)+'" font-size="12" fill="var(--soft)">dB</text>';
+ const vis=S.pts.filter(p=>p[0]<=XMAX*prog);
+ g+='<polyline points="'+vis.map(p=>X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1)).join(' ')+'" fill="none" stroke="var(--trace)" stroke-width="2" stroke-linejoin="round"/>';
+ if(prog<1&&vis.length){const p=vis[vis.length-1];g+='<circle cx="'+X(p[0])+'" cy="'+Y(p[1])+'" r="6" fill="#FF5A1F"/>'}
+ if(prog>=1&&!chal)S.out.forEach((e,i)=>{const x=X(e.km),y=H-mb-2;g+='<g class="mk" data-i="'+i+'" style="cursor:pointer"><line x1="'+x+'" x2="'+x+'" y1="'+mt+'" y2="'+(y-18)+'" stroke="#FF5A1F" stroke-dasharray="3 4" opacity="'+(sel===i?1:.45)+'"/><circle cx="'+x+'" cy="'+(y-30)+'" r="13" fill="'+(sel===i?'#FF5A1F':'#0B2149')+'" stroke="#fff" stroke-width="2"/><text x="'+x+'" y="'+(y-25)+'" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">'+(i+1)+'</text></g>'});
+ if(chal&&chal.guess!=null){g+='<line x1="'+X(chal.guess)+'" x2="'+X(chal.guess)+'" y1="'+mt+'" y2="'+(H-mb)+'" stroke="#FF5A1F" stroke-width="3"/>';
+  if(chal.shown)g+='<line x1="'+X(chal.br)+'" x2="'+X(chal.br)+'" y1="'+mt+'" y2="'+(H-mb)+'" stroke="#1f9d6b" stroke-width="3" stroke-dasharray="6 4"/>'}
+ tS.innerHTML=g;tS._X=X;tS._ml=ml;tS._W=W;tS._mr=mr;
+ $$('#trace .mk').forEach(m=>m.addEventListener('click',()=>showEv(+m.dataset.i)));
+ renderTable(S.out)}
+function nm(e){return e.k==='fim'?'Fim da fibra':EV[e.k].n}
+function renderTable(out){$('#evTb').innerHTML=chal?'<tr><td colspan="5" class="small">Escondida durante o desafio — leia o traço!</td></tr>':out.map((e,i)=>'<tr class="ev" data-i="'+i+'"><td>'+(i+1)+'</td><td>'+nm(e)+'</td><td class="num">'+fmt(e.km,3)+' km</td><td class="num">'+(e.loss>50?'—':fmt(e.loss,2)+' dB')+'</td><td>'+(e.refl?'Reflexivo':'Não reflexivo')+'</td></tr>').join('');
+ $$('#evTb tr.ev').forEach(r=>r.addEventListener('click',()=>showEv(+r.dataset.i)))}
+function showEv(i){const e=lastS.out[i];sel=i;drawTrace();const t=e.k==='fim'?'Fim do enlace (conector na ponta, por exemplo no DIO ou na CTO). Grande pico de reflexão e depois o traço cai para o nível de ruído — é o fim esperado da fibra.':EV[e.k].txt;
+ $('#evInfo').innerHTML='<h3>'+(i+1)+'. '+nm(e)+' — '+fmt(e.km,3)+' km</h3><p>'+t+'</p>'+(e.k==='cur'?'<p class="small">Perda agora em '+lam+' nm: '+fmt(e.loss,2)+' dB.</p>':'')+'<p class="small">Inclinação da fibra em '+lam+' nm: '+(lam===1310?'0,35':'0,20')+' dB/km.</p>';
+ if(!st.done.simulador&&Object.keys(seen).length>=0){seen[e.k]=1;if(Object.keys(seen).length>=3)award('simulador')}}
+const seen={};
+$('#fire').addEventListener('click',()=>{chal=null;sel=null;seed=1+Math.floor(Math.random()*1e6);$('#simMsg').textContent='';prog=0;anim(1500,p=>{prog=p;drawTrace()},()=>{prog=1;drawTrace();$('#simMsg').textContent='Teste concluído. Clique nos números para ver cada evento.'})});
+$('#chal').addEventListener('click',()=>{sel=null;seed=1+Math.floor(Math.random()*1e6);const br=+(2.5+Math.random()*11).toFixed(2);const ev=[{k:'rom',km:br}];
+ if(Math.random()<.8)ev.push({k:'con',km:+(0.8+Math.random()*(br-1.2)).toFixed(2)});if(Math.random()<.8)ev.push({k:'fus',km:+(0.5+Math.random()*(br-1)).toFixed(2)});
+ chal={ev,br,guess:null,shown:0};prog=1;drawTrace();$('#simMsg').textContent='Onde a fibra rompeu? Clique no gráfico, no ponto exato.'});
+tS.addEventListener('click',e=>{if(!chal||chal.shown)return;const r=tS.getBoundingClientRect();const x=(e.clientX-r.left-tS._ml)/(tS._W-tS._ml-tS._mr)*XMAX;if(x<0||x>XMAX)return;
+ chal.guess=x;chal.shown=1;const err=Math.abs(x-chal.br)*1000;drawTrace();
+ const m=$('#simMsg');if(err<=250){m.className='msg ok';m.textContent='Acertou! Rompimento em '+fmt(chal.br,2)+' km (você errou só '+Math.round(err)+' m).';award('simulador')}
+ else{m.className='msg no';m.textContent='Quase! O rompimento estava em '+fmt(chal.br,2)+' km (linha verde). Procure o último pico antes do ruído.'}});
+new ResizeObserver(drawTrace).observe(tS);
+
+/* ---------- FASE 3: potência ---------- */
+const SPL=[['1:2',3.7],['1:4',7.3],['1:8',10.5],['1:16',13.7],['1:32',17.1],['1:64',20.5]];let sp=['1:8','1:8'];
+$('#spAdd').innerHTML=SPL.map(s=>'<button class="chip" data-s="'+s[0]+'">+ '+s[0]+' <span class="small">'+fmt(s[1],1)+' dB</span></button>').join('');
+$$('#spAdd .chip').forEach(b=>b.addEventListener('click',()=>{if(sp.length<3)sp.push(b.dataset.s);calc()}));
+function calc(){const [omin,omax]=$('#pOlt').value.split(',').map(Number),a=+$('#pLam').value,km=Math.max(0,+$('#pKm').value||0),c=+$('#pCon').value||0,f=+$('#pFus').value||0,m=+$('#pMec').value||0;
+ const sl=sp.reduce((t,s)=>t+SPL.find(x=>x[0]===s)[1],0);
+ const rows=[['Fibra ('+fmt(km,1)+' km × '+fmt(a,2)+')',km*a,km*a],['Splitters ('+(sp.join(' + ')||'nenhum')+')',sl,sl],['Conectores ('+c+')',c*.15,c*.5],['Fusões ('+f+')',f*.02,f*.1],['Emendas mecânicas ('+m+')',m*.1,m*.3]];
+ const lmin=rows.reduce((t,r)=>t+r[1],0),lmax=rows.reduce((t,r)=>t+r[2],0);const best=omax-lmin,worst=omin-lmax;
+ $('#spList').innerHTML=sp.length?sp.map((s,i)=>'<button class="chip on" data-i="'+i+'">'+s+' ✕</button>').join(''):'<span class="small">Nenhum splitter adicionado.</span>';
+ $$('#spList .chip').forEach(b=>b.addEventListener('click',()=>{sp.splice(+b.dataset.i,1);calc()}));
+ $('#pRes').textContent=fmt(worst,1)+' dBm';$('#pRange').textContent='Pior caso. No melhor caso: '+fmt(best,1)+' dBm';
+ const pos=v=>Math.max(0,Math.min(100,(v+32)/32*100))+'%';$('#mW').style.left=pos(worst);$('#mB').style.left=pos(best);
+ const s=$('#pStat');if(worst>=-25&&worst<=-8){s.className='msg ok';s.textContent='Dentro do esperado: o cliente terá bom sinal.'}else if(worst>-8){s.className='msg no';s.textContent='Sinal forte demais: pode saturar a ONU. Considere atenuador.'}else if(worst>=-27){s.className='msg';s.style.color='var(--warn)';s.textContent='Atenção: margem apertada. Qualquer conector sujo derruba o cliente.'}else{s.className='msg no';s.textContent='Crítico: o sinal não chega bem. Reduza splitters ou distância.'}
+ if(!(worst>=-27&&worst<-25))s.style.color='';
+ $('#pTb').innerHTML='<tr><td>Potência da OLT</td><td class="num">'+fmt(omin,1)+' a '+fmt(omax,1)+' dBm</td></tr>'+rows.map(r=>'<tr><td>'+r[0]+'</td><td class="num">−'+fmt(r[1],2)+' a −'+fmt(r[2],2)+' dB</td></tr>').join('')+'<tr><td><b>Perda total</b></td><td class="num"><b>'+fmt(lmin,2)+' a '+fmt(lmax,2)+' dB</b></td></tr>'}
+$$('#potencia select,#potencia input').forEach(i=>i.addEventListener('input',calc));calc();
+
+/* ---------- FASE 4: tela ---------- */
+const P=(d,bg)=>'<svg viewBox="0 0 44 44"><rect width="44" height="44" rx="8" fill="'+bg+'"/>'+d+'</svg>';
+const ICONS=[
+ ['Explorador',P('<path d="M8 14h11l3 3h14v15H8z" fill="#fff"/><path d="M8 19h28v13H8z" fill="#ffd36b"/>','#2a6fdb'),'Acesso aos arquivos armazenados no OTDR. Consulta de medições anteriores, organização e gerenciamento de relatórios. Garante a <b>rastreabilidade</b> dos testes.'],
+ ['Configs',P('<circle cx="22" cy="22" r="11" fill="none" stroke="#fff" stroke-width="5" stroke-dasharray="4 3"/><circle cx="22" cy="22" r="5" fill="#fff"/>','#2a6fdb'),'Ajuste dos parâmetros do equipamento: idioma, data, hora e perfis de teste.'],
+ ['Connect',P('<path d="M22 8v12M12 24h20M14 24v10M30 24v10M22 20v14" stroke="#fff" stroke-width="3"/>','#2a6fdb'),'Conexão com computador, dispositivos externos e rede. Transferência e compartilhamento dos arquivos de medição, além de auxiliar o técnico.'],
+ ['SmartAccess',P('<rect x="8" y="10" width="20" height="14" rx="2" fill="#fff"/><rect x="18" y="20" width="18" height="14" rx="2" fill="#ffd36b"/>','#e9eef7'),'<b>Acesso remoto</b> ao OTDR: suporte técnico em tempo real, compartilhamento de tela e resultados, assistência remota para diagnósticos — falhas resolvidas mais rápido.'],
+ ['StrataSync',P('<path d="M12 30a7 7 0 0 1 1-14 9 9 0 0 1 17 1 6.5 6.5 0 0 1 2 13z" fill="#fff"/>','#2a9df4'),'Sincronização automática dos resultados na <b>nuvem</b>. Backup e acesso remoto aos testes realizados.'],
+ ['Adicionar opções',P('<circle cx="22" cy="22" r="13" fill="#fff"/><path d="M22 15v14M15 22h14" stroke="#2a6fdb" stroke-width="4"/>','#2a6fdb'),'Importar arquivo de licença ou inserir código manualmente para instalar opções adquiridas e ativar módulos avançados de teste.'],
+ ['Localizador de falhas',P('<path d="M10 34 28 16" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="31" cy="13" r="5" fill="#ff4b3a"/>','#2a6fdb'),'É o <b>VFL</b>: emite laser vermelho visível (geralmente 650 nm). Identifica rompimentos, conectores defeituosos e curvaturas acentuadas — a luz “vaza” no ponto da falha. Para inspeções rápidas em curtas distâncias.'],
+ ['OTDR Expert',P('<path d="M8 12l6 4 4 10 6 2 6 8 6 2" stroke="#0B2149" stroke-width="3" fill="none"/>','#ffcc00'),'Análise avançada do traço com <b>controle manual</b> dos parâmetros (pulso, faixa, tempo). Identifica perdas, reflexões e eventos. Indicado para diagnóstico detalhado e certificação de enlaces.'],
+ ['Smart Test',P('<path d="M12 32 26 18" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M30 8l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#ffd36b"/>','#2a6fdb'),'Faz a medição OTDR de forma <b>simplificada</b>: ajusta os parâmetros automaticamente, identifica eventos e mostra o resultado de forma intuitiva. Ótimo para começar.'],
+ ['OTDR FTTH',P('<path d="M8 22h10M18 22l10-9M18 22h12M18 22l10 9" stroke="#fff" stroke-width="3"/><path d="M28 9l7 4-7 4z M30 18l7 4-7 4z M28 27l7 4-7 4z" fill="#ffd36b"/>','#2a6fdb'),'Modo específico para redes FTTH: analisa enlaces com <b>splitters</b> e múltiplas ramificações. Identifica CTOs, splitters e eventos da rede — ideal para o acesso ao cliente.<br><br>Já o modo <b>OTDR Monomodo</b> faz o teste clássico em fibras monomodo: envia pulsos de luz para mapear a fibra, medir distâncias e achar perdas ao longo do cabo.'],
+ ['Fonte',P('<circle cx="22" cy="22" r="6" fill="#0B2149"/><path d="M22 6v8M22 30v8M6 22h8M30 22h8M11 11l5 5M28 28l5 5M33 11l-5 5M16 28l-5 5" stroke="#0B2149" stroke-width="3"/>','#ffcc00'),'Gera sinal óptico <b>estável</b> em comprimentos de onda específicos. Usada junto com o medidor de potência para medir a perda óptica do enlace, continuidade e desempenho.'],
+ ['Medidor de pot',P('<rect x="8" y="10" width="28" height="20" rx="3" fill="#fff"/><path d="M14 26a8 8 0 0 1 16 0" stroke="#0B2149" stroke-width="3" fill="none"/><path d="M22 26l5-6" stroke="#ff4b3a" stroke-width="3"/>','#2a6fdb'),'Power Meter: mede o nível de potência óptica recebido (dBm). Verifica se o sinal está dentro dos parâmetros operacionais da rede e ajuda a validar enlaces.']];
+const seenI={};
+function ic(i){return '<button class="ic" data-i="'+i+'">'+ICONS[i][1]+'<span>'+ICONS[i][0]+'</span></button>'}
+$('#icons1').innerHTML=[0,1,2,3,4,5].map(ic).join('');$('#icons2').innerHTML=[6,7,8,9,10,11].map(ic).join('');
+$$('.ic').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.i;$$('.ic').forEach(x=>x.classList.toggle('on',x===b));b.classList.add('seen');seenI[i]=1;
+ const n=Object.keys(seenI).length;$('#seenC').textContent=n;$('#icInfo').innerHTML='<h3>'+ICONS[i][0]+'</h3><p class="small">'+(i<6?'Função do aparelho':'Função de teste')+'</p><p>'+ICONS[i][2]+'</p>'+(n===12?'<p class="msg ok">Você explorou a tela inteira!</p>':'<p class="small">Faltam '+(12-n)+' ícones.</p>');
+ if(n===12)award('tela')}));
+
+/* ---------- FASE 5: portas ---------- */
+const PORTS=[
+ {id:'apc',n:'Porta APC',s:'1310 / 1550 nm',c:'#2bb04a',t:'Emite os comprimentos de onda padrão. O <b>1310 nm</b> é o mais comum em testes e certificações de redes FTTH. O <b>1550 nm</b> é o recomendado para <b>enlaces longos</b>, porque sofre menos atenuação na fibra.'},
+ {id:'live',n:'APC Live',s:'1625 / 1650 nm',c:'#2bb04a',t:'Para testes em <b>fibras ativas</b> (com tráfego de clientes). Tem um filtro que bloqueia o sinal da PON (1490 / 1577 nm) e testa fora da banda, em 1625 ou 1650 nm — sem derrubar ninguém.'},
+ {id:'vfl',n:'VFL',s:'luz vermelha',c:'#d93a2b',t:'Identificação <b>visual</b> de falhas de curto alcance, com luz vermelha visível (geralmente <b>650 nm</b>). Com a luz vermelha na fibra você vê quebras, curvaturas excessivas ou fusões malfeitas — a luz “vaza” nesses pontos.'},
+ {id:'usb',n:'USB',s:'dados',c:'#6b7a99',t:'Extração de relatórios e dados: salve as curvas (<b>.SOR</b>) e relatórios em PDF num pen drive. Também conecta periféricos, como a <b>sonda de inspeção</b> (microscópio) para ver se os conectores estão limpos antes do teste.'}];
+function drawPorts(sel){let g='<rect x="10" y="40" width="540" height="150" rx="22" fill="#2a2d33"/><rect x="10" y="40" width="540" height="22" rx="11" fill="#3c4048"/>';
+ PORTS.forEach((p,i)=>{const x=40+i*130;g+='<g class="port'+(sel===p.id?' on':'')+'" data-id="'+p.id+'" tabindex="0" role="button" aria-label="'+p.n+'"><rect class="body" x="'+x+'" y="78" width="100" height="78" rx="12" fill="#454a54" stroke="#5c6270" stroke-width="2"/>'+
+  (p.id==='usb'?'<rect x="'+(x+28)+'" y="104" width="44" height="18" rx="2" fill="#111"/><rect x="'+(x+34)+'" y="108" width="32" height="6" fill="#cfd3da"/>':p.id==='vfl'?'<circle cx="'+(x+50)+'" cy="114" r="18" fill="'+p.c+'"/><circle cx="'+(x+50)+'" cy="114" r="6" fill="#111"/>':'<rect x="'+(x+32)+'" y="94" width="36" height="40" rx="4" fill="'+p.c+'"/><circle cx="'+(x+50)+'" cy="114" r="6" fill="#0d3b18"/>')+
+  '<text x="'+(x+50)+'" y="178" text-anchor="middle" font-size="15" font-weight="800" fill="#fff">'+p.n+'</text><text x="'+(x+50)+'" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">'+p.s+'</text></g>'});
+ $('#portSvg').innerHTML=g;$$('.port').forEach(el=>{const go=()=>{const p=PORTS.find(x=>x.id===el.dataset.id);drawPorts(p.id);$('#portInfo').innerHTML='<h3>'+p.n+'</h3><p>'+p.t+'</p>'};el.addEventListener('click',go);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})})}
+drawPorts(null);
+const SCN=[['Preciso testar a fibra de um cliente que está navegando agora, sem derrubar a PON.','live'],['Vou certificar um backbone de 40 km entre dois POPs.','apc'],['Quero ver se há uma dobra na fibra dentro do DIO, a poucos metros.','vfl'],['Terminei o teste e preciso levar o arquivo .SOR para o escritório.','usb'],['Rede FTTH nova, sem clientes ainda: certificação padrão.','apc']];
+let sI=0,sOk=0;
+function renderScn(){if(sI>=SCN.length){$('#scn').innerHTML='<p class="msg ok">Você acertou '+sOk+' de '+SCN.length+'.</p><button class="btn ghost" id="sAg">Jogar de novo</button>';if(sOk>=4)award('portas');$('#sAg').onclick=()=>{sI=0;sOk=0;renderScn()};return}
+ $('#scn').innerHTML='<p class="small">Situação '+(sI+1)+' de '+SCN.length+'</p><p class="q">'+SCN[sI][0]+'</p><div class="opts">'+PORTS.map(p=>'<button class="opt" data-id="'+p.id+'">'+p.n+' <span class="small">('+p.s+')</span></button>').join('')+'</div><p id="sMsg" style="margin-top:12px"></p>';
+ $$('#scn .opt').forEach(b=>b.addEventListener('click',()=>{if($('#scn').dataset.lock==='1')return;$('#scn').dataset.lock='1';const ok=b.dataset.id===SCN[sI][1];if(ok)sOk++;
+  $$('#scn .opt').forEach(x=>{if(x.dataset.id===SCN[sI][1])x.classList.add('right')});if(!ok)b.classList.add('wrong');
+  $('#sMsg').innerHTML=(ok?'<span class="ok">Isso!</span> ':'<span class="no">Não foi dessa vez.</span> ')+PORTS.find(p=>p.id===SCN[sI][1]).t;
+  const nx=document.createElement('button');nx.className='btn';nx.textContent='Próxima';nx.style.marginTop='8px';nx.onclick=()=>{sI++;$('#scn').dataset.lock='0';renderScn()};$('#scn').appendChild(nx)}))}
+renderScn();
+
+/* ---------- FASE: ler eventos ---------- */
+function nz(x0,x1,yc,amp,sd){let o=[];for(let x=x0;x<=x1;x+=2){sd=(sd*9301+49297)%233280;o.push(x+','+(yc+(sd/233280-.5)*2*amp).toFixed(1))}return o.join(' ')}
+const EVT=[
+ {id:'zona',n:'Início do traço e zona morta',p:['6,6 18,40 24,34 192,54'],como:'Pico alto logo no começo (o conector do próprio OTDR). Logo depois vem a “zona morta”: um trecho em que o aparelho fica ofuscado e não enxerga eventos.',val:'Maior com pulso longo (1 µs), menor com pulso curto (10 ns).',fazer:'Use uma bobina de lançamento (fibra extra) para conseguir enxergar o primeiro conector da rede.'},
+ {id:'fibra',n:'Atenuação da fibra',p:['8,16 192,72'],como:'Linha reta descendo devagar: é a luz que a própria fibra perde pelo caminho.',val:'1310 nm: 0,35 · 1490 nm: 0,25 · 1550 nm: 0,20 dB/km.',fazer:'Inclinação maior que o normal pode indicar fibra ruim ou muitas microcurvaturas.'},
+ {id:'fus',n:'Perda por emenda de fusão',p:['8,30 100,42 101,50 192,62'],como:'Pequeno degrau para baixo, sem pico. Evento não reflexivo.',val:'0,02 a 0,1 dB.',fazer:'Acima de 0,1 dB, refaça a fusão (clivagem ruim, sujeira ou desalinhamento).'},
+ {id:'mec',n:'Emenda mecânica',p:['8,30 100,42 101,32 104,50 192,62'],como:'Degrau para baixo, às vezes com um pico pequeno (há gel entre as pontas da fibra).',val:'0,1 a 0,3 dB.',fazer:'Use em reparo provisório; na manutenção definitiva, troque por fusão.'},
+ {id:'con',n:'Conector',p:['8,30 100,42 101,12 106,52 192,64'],como:'Pico (reflexão) seguido de um degrau (perda). Evento reflexivo.',val:'Perda de 0,15 a 0,5 dB.',fazer:'Perda ou pico acima do normal: conector sujo, riscado ou mal encaixado. Inspecione com a sonda e limpe.'},
+ {id:'spl',n:'Splitter',p:['8,18 100,28 102,62 192,72'],como:'Degrau grande para baixo, sem pico. O modo OTDR FTTH ajuda a identificar.',val:'1:2 3,7 · 1:4 7,3 · 1:8 10,5 · 1:16 13,7 · 1:32 17,1 · 1:64 20,5 dB.',fazer:'Confira se a perda bate com o splitter previsto no projeto.'},
+ {id:'cur',n:'Curvatura (dobra)',p:['8,30 100,42 102,47 192,59','8,22 100,30 102,54 192,62'],leg:1,como:'Degrau sem pico que fica muito maior em 1550 nm do que em 1310 nm.',val:'Ex.: 0,25 dB em 1310 nm e mais de 1 dB em 1550 nm.',fazer:'Teste nos dois comprimentos de onda. Procure cabo dobrado em caixa, reserva ou abraçadeira apertada. Perto, use o VFL para ver a luz vazando.'},
+ {id:'ganho',n:'Ganho aparente (gainer)',p:['8,28 100,44 101,36 192,48'],como:'Degrau para CIMA, como se a fibra ganhasse sinal. É ilusão: acontece na fusão entre fibras com características diferentes.',val:'Pequeno, de centésimos a décimos de dB.',fazer:'Não é defeito sozinho. Para a perda real, teste dos dois lados da fibra e tire a média.'},
+ {id:'rom',n:'Rompimento ou fim da fibra',p:['8,28 110,44 111,6 116,80 '+nz(118,192,80,3,7)],como:'Pico grande e, logo depois, a linha cai no ruído. Dali em diante a luz não passa.',val:'O traço termina naquele ponto.',fazer:'Se acontece antes do fim esperado, é rompimento. Anote a distância e compare com a rota do cabo para chegar ao local.'},
+ {id:'fant',n:'Fantasma (eco falso)',p:['8,24 80,36 81,8 85,80 '+nz(87,148,80,3,3)+' 150,79 151,62 154,80 '+nz(156,192,80,3,11)],como:'Pico depois do fim da fibra (ou onde não há nada), sem degrau de perda. É uma reflexão forte “quicando” duas vezes.',val:'Sem perda; costuma aparecer no dobro da distância de um reflexo forte.',fazer:'Não mande equipe ao local! Limpe o conector que reflete muito e repita o teste.'},
+ {id:'ruido',n:'Ruído',p:['8,18 90,44 '+nz(92,192,62,10,5)],como:'Linha tremida, “cabeluda”. Aparece quando a luz que volta é fraca demais.',val:'Pulso curto: mais ruído e menos alcance. Pulso longo: menos ruído e mais alcance.',fazer:'Em enlaces longos, aumente o pulso ou o tempo de média do teste.'}];
+function mini(e,lbl){const cols=['var(--trace)','#FF5A1F'];let g='';for(let y=15;y<90;y+=20)g+='<line x1="0" x2="200" y1="'+y+'" y2="'+y+'" stroke="var(--grid)"/>';
+ e.p.forEach((pt,i)=>g+='<polyline points="'+pt+'" fill="none" stroke="'+cols[i]+'" stroke-width="2" stroke-linejoin="round"/>');
+ if(e.leg)g+='<text x="140" y="44" font-size="9" font-weight="800" fill="var(--trace)">1310 nm</text><text x="140" y="74" font-size="9" font-weight="800" fill="#FF5A1F">1550 nm</text>';
+ return '<svg class="mini" viewBox="0 0 200 90" role="img" aria-label="'+(lbl||'Traço de exemplo')+'">'+g+'</svg>'}
+$('#evCards').innerHTML=EVT.map(e=>'<div class="evc"><h3>'+e.n+'</h3>'+mini(e,e.n)+'<dl><dt>Como aparece</dt><dd>'+e.como+'</dd><dt>Valor típico</dt><dd>'+e.val+'</dd><dt>O que fazer</dt><dd>'+e.fazer+'</dd></dl></div>').join('');
+let gI,gOk,gSet,gLock;
+function gStart(){gSet=shuffle(EVT.filter(e=>e.id!=='fibra')).slice(0,6);gI=0;gOk=0;gRender()}
+function gRender(){const b=$('#evGame');gLock=0;
+ if(gI>=gSet.length){b.innerHTML='<p class="msg '+(gOk>=4?'ok':'no')+'">Você acertou '+gOk+' de 6.'+(gOk>=4?' Fase concluída!':' Revise os cartões acima e tente de novo.')+'</p><button class="btn ghost" id="gAg">Jogar de novo</button>';if(gOk>=4)award('eventos');$('#gAg').onclick=gStart;return}
+ const e=gSet[gI],ops=shuffle([e].concat(shuffle(EVT.filter(x=>x!==e)).slice(0,3)));
+ b.innerHTML='<p class="small">Rodada '+(gI+1)+' de 6 · acertos: '+gOk+'</p><div style="max-width:460px">'+mini(e)+'</div><div class="opts" style="margin-top:12px">'+ops.map(o=>'<button class="opt" data-id="'+o.id+'">'+o.n+'</button>').join('')+'</div><p id="gFb" style="margin-top:10px"></p>';
+ $$('#evGame .opt').forEach(o=>o.addEventListener('click',()=>{if(gLock)return;gLock=1;const ok=o.dataset.id===e.id;if(ok)gOk++;
+  $$('#evGame .opt').forEach(x=>{if(x.dataset.id===e.id)x.classList.add('right')});if(!ok)o.classList.add('wrong');
+  $('#gFb').innerHTML='<b class="'+(ok?'ok':'no')+'">'+(ok?'Isso!':'Era: '+e.n+'.')+'</b> '+e.como+'<br><button class="btn" style="margin-top:10px" id="gNx">Próxima</button>';$('#gNx').onclick=()=>{gI++;gRender()}}))}
+
+/* ---------- FASE 6: quiz ---------- */
+const QZ=[
+ ['O que significa a sigla OTDR?',['Optical Time Domain Reflectometer','Optical Transmission Data Router','Optical Test Digital Receiver','Output Time Delay Regulator'],'Reflectômetro óptico no domínio do tempo: ele mede o tempo que a luz leva para voltar.','eco'],
+ ['Qual comparação explica melhor como o OTDR funciona?',['Um eco na montanha','Um termômetro','Uma balança','Um rádio AM'],'Ele envia um pulso de luz e mede o tempo do “eco” que volta para localizar eventos.','eco'],
+ ['Qual comprimento de onda é o recomendado para enlaces longos?',['1550 nm','1310 nm','650 nm','850 nm'],'O 1550 nm sofre menos atenuação na fibra (0,20 dB/km).','portas'],
+ ['Que porta usar para testar uma fibra com clientes ativos?',['APC Live (1625/1650 nm)','Porta APC 1310 nm','VFL','USB'],'A APC Live filtra o sinal da PON e testa fora da banda, sem derrubar o serviço.','portas'],
+ ['O VFL emite luz em qual comprimento de onda, geralmente?',['650 nm (vermelha visível)','1310 nm','1490 nm','1625 nm'],'Luz vermelha visível: dá para ver o ponto onde ela vaza.','portas'],
+ ['Qual é a perda típica de um splitter 1:8?',['10,5 dB','3,7 dB','7,3 dB','17,1 dB'],'Pela tabela: 1:2 = 3,7 · 1:4 = 7,3 · 1:8 = 10,5 · 1:16 = 13,7 · 1:32 = 17,1 · 1:64 = 20,5 dB.','potencia'],
+ ['Qual a perda esperada de uma emenda por fusão?',['0,02 a 0,1 dB','0,5 a 1 dB','0,15 a 0,5 dB','3 dB'],'Fusão bem feita perde muito pouco. 0,15–0,5 dB é a faixa de conectores.','potencia'],
+ ['Qual a atenuação da fibra em 1310 nm?',['0,35 dB/km','0,20 dB/km','0,25 dB/km','1 dB/km'],'Pela tabela: 1310 nm = 0,35 · 1490 nm = 0,25 · 1550 nm = 0,20 dB/km.','potencia'],
+ ['Qual função sincroniza os resultados na nuvem e faz backup?',['StrataSync','Explorador','Fonte','Smart Test'],'StrataSync leva os testes para a nuvem; SmartAccess é o acesso remoto/suporte.','tela'],
+ ['Qual função permite suporte técnico remoto em tempo real?',['SmartAccess','StrataSync','Configs','OTDR Expert'],'O SmartAccess dá acesso remoto ao OTDR, com compartilhamento de tela e resultados.','tela'],
+ ['Qual modo é próprio para redes com splitters e várias ramificações?',['OTDR FTTH','OTDR Monomodo','Fonte','Medidor de pot'],'O OTDR FTTH identifica CTOs, splitters e eventos da rede de acesso.','tela'],
+ ['Para que servem a Fonte e o Medidor de potência usados juntos?',['Medir a perda óptica do enlace','Localizar rompimentos visualmente','Configurar a data e hora','Ativar licenças'],'Um gera luz estável, o outro mede quanto chegou: a diferença é a perda.','tela'],
+ ['Em que formato as curvas de teste são salvas no pen drive?',['.SOR','.MP3','.DOCX','.ZIP'],'.SOR é o padrão das curvas OTDR; os relatórios também saem em PDF.','portas'],
+ ['No traço do OTDR, um pico seguido de ruído indica:',['Fim da fibra ou rompimento','Uma fusão perfeita','Atenuação normal da fibra','Um splitter 1:2'],'Depois do ponto, a luz não passa mais — só sobra ruído.','eventos'],
+ ['Um pequeno degrau para baixo, sem pico, de 0,05 dB, é típico de:',['Emenda por fusão','Conector sujo','Rompimento','Fantasma'],'Fusão é evento não reflexivo: só degrau, com perda de 0,02 a 0,1 dB.','eventos'],
+ ['Um evento que perde bem mais em 1550 nm do que em 1310 nm indica:',['Curvatura na fibra','Splitter','Emenda mecânica','Fim da fibra'],'Curvaturas são muito mais sensíveis em 1550 nm — por isso se testa nos dois comprimentos.','eventos'],
+ ['O que forma o pico (evento reflexivo) no traço?',['Luz que bate e volta, como em conectores','A atenuação normal da fibra','O ruído do aparelho','Uma fusão bem feita'],'Conectores, emendas mecânicas e pontas de fibra refletem luz — isso gera o pico.','eventos']];
+let qOrd,qI,qOk,qLock;
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function qStart(){qOrd=shuffle(QZ.map((_,i)=>i)).slice(0,10);qI=0;qOk=0;qRender()}
+function qRender(){const box=$('#quizBox');qLock=0;
+ if(qI>=qOrd.length){const pct=qOk*10;box.innerHTML='<h3>Resultado</h3><div class="big" style="margin:10px 0">'+qOk+' / 10</div><p class="lead">'+(pct>=70?(allDone()?'Aprovado! Seu certificado foi liberado logo abaixo.':'Aprovado no quiz! Conclua as fases que faltam para liberar o certificado.'):pct>=60?'Bom! Revise as fases em que errou e tente de novo.':'Volte ao simulador e às portas, depois tente outra vez.')+'</p><button class="btn" id="qAg">Refazer o quiz</button>';if(pct>=70){award('quiz');if(!st.best||qOk>st.best.s){st.best={s:qOk,d:st.best?st.best.d:new Date().toISOString()};save()}}certRender();if(pct>=70&&allDone())setTimeout(()=>$('#certBox').scrollIntoView({behavior:'smooth'}),300);$('#qAg').onclick=qStart;return}
+ const q=QZ[qOrd[qI]],op=shuffle(q[1].map((t,i)=>[t,i]));
+ box.innerHTML='<div class="row" style="justify-content:space-between"><span class="small">Pergunta '+(qI+1)+' de 10</span><span class="small">Acertos: '+qOk+'</span></div><div class="bar" style="background:var(--line)"><i style="width:'+(qI*10)+'%"></i></div><p class="q" style="margin-top:16px">'+q[0]+'</p><div class="opts">'+op.map(o=>'<button class="opt" data-c="'+(o[1]===0?1:0)+'">'+o[0]+'</button>').join('')+'</div><p id="qFb" style="margin-top:12px"></p>';
+ $$('#quizBox .opt').forEach(b=>b.addEventListener('click',()=>{if(qLock)return;qLock=1;const ok=b.dataset.c==='1';if(ok)qOk++;
+  $$('#quizBox .opt').forEach(x=>{if(x.dataset.c==='1')x.classList.add('right')});if(!ok)b.classList.add('wrong');
+  $('#qFb').innerHTML='<b class="'+(ok?'ok':'no')+'">'+(ok?'Certo!':'Ops!')+'</b> '+q[2]+(ok?'':' <br><span class="small">Reveja na fase </span><a class="lnk" href="#'+q[3]+'">'+FASES.find(f=>f[0]===q[3])[1]+'</a>')+'<br><button class="btn" style="margin-top:10px" id="qNx">'+(qI===9?'Ver resultado':'Próxima')+'</button>';$('#qNx').onclick=()=>{qI++;qRender()}}))}
+qStart();gStart();
+
+/* ---------- certificado ---------- */
+const NEED=FASES.filter(f=>f[0]!=='quiz');
+function allDone(){return NEED.every(f=>st.done[f[0]])}
+function certCode(){const src=(st.name||'')+'|'+(st.best?st.best.d:'')+'|'+(st.best?st.best.s:'');let h=2166136261;for(const c of src){h^=c.charCodeAt(0);h=Math.imul(h,16777619)>>>0}
+ let h2=h^0x9e3779b9;h2=Math.imul(h2,2246822519)>>>0;const t=(h.toString(36)+h2.toString(36)).toUpperCase().replace(/[^A-Z0-9]/g,'').padEnd(8,'7');return 'OTDR-'+t.slice(0,4)+'-'+t.slice(4,8)}
+function dataExt(iso){const d=iso?new Date(iso):new Date();return d.toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}
+function nivel(){const lv=['Aprendiz','Ajudante de campo','Auxiliar técnico','Técnico júnior','Técnico','Técnico pleno','Especialista','Mestre do OTDR'];return lv[Object.keys(st.done).length]}
+const DISP="'Lilita One', Nunito, system-ui, sans-serif",TXT="Nunito, system-ui, sans-serif";
+function drawCert(ctx,W,H){const u=W/297;const mm=v=>v*u;
+ const poly=(pts,c)=>{ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(mm(p[0]),mm(p[1])):ctx.moveTo(mm(p[0]),mm(p[1])));ctx.closePath();ctx.fillStyle=c;ctx.fill()};
+ const txt=(t,x,y,size,font,color,align='center',weight='')=>{ctx.font=weight+' '+mm(size)+'px '+font;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='alphabetic';ctx.fillText(t,mm(x),mm(y))};
+ const wrapT=(t,maxw,size,font,weight='')=>{ctx.font=weight+' '+mm(size)+'px '+font;const out=[];let cur='';t.split(' ').forEach(w=>{const k=cur?cur+' '+w:w;if(ctx.measureText(k).width>mm(maxw)&&cur){out.push(cur);cur=w}else cur=k});out.push(cur);return out};
+ ctx.fillStyle='#FBFAF6';ctx.fillRect(0,0,W,H);
+ // moldura fina
+ ctx.strokeStyle='#d8d2c4';ctx.lineWidth=mm(.5);ctx.strokeRect(mm(8),mm(8),mm(281),mm(194));
+ // formas da marca
+ poly([[0,0],[112,0],[92,24],[0,24]],'#0B2149');poly([[0,24],[92,24],[86,31],[0,31]],'#FF5A1F');
+ poly([[222,0],[297,0],[297,20],[238,20]],'#2F8A97');
+ ctx.fillStyle='rgba(255,255,255,.85)';for(let i=0;i<6;i++)for(let j=0;j<2;j++){ctx.beginPath();ctx.arc(mm(252+i*7),mm(6+j*7),mm(.8),0,7);ctx.fill()}
+ poly([[236,210],[297,148],[297,210]],'#2F8A97');poly([[262,210],[297,174],[297,210]],'#0B2149');
+ poly([[0,178],[0,210],[34,210]],'#FF5A1F');
+ // logo
+ const lg=$('#logoN');if(lg&&lg.complete&&lg.naturalWidth){const w=58,h=w*lg.naturalHeight/lg.naturalWidth;ctx.drawImage(lg,mm(148.5-w/2),mm(14),mm(w),mm(h))}
+ txt('CERTIFICADO',148.5,57,15,DISP,'#0B2149');
+ ctx.letterSpacing=mm(1.6)+'px';txt('DE CONCLUSÃO DE TREINAMENTO',148.5,65,4.2,TXT,'#FF5A1F','center','800');ctx.letterSpacing='0px';
+ txt('Certificamos que',148.5,77,4.6,TXT,'#4a5672');
+ const nome=(st.name||'').trim()||'Seu nome aparecerá aqui';
+ let ns=12.5;ctx.font=mm(ns)+'px '+DISP;while(ctx.measureText(nome).width>mm(200)&&ns>7){ns-=.5;ctx.font=mm(ns)+'px '+DISP}
+ txt(nome,148.5,92,ns,DISP,(st.name||'').trim()?'#0B2149':'#b9b3a5');
+ ctx.fillStyle='#FF5A1F';ctx.fillRect(mm(73.5),mm(96),mm(150),mm(.7));
+ const par='concluiu o treinamento interativo Academia OTDR, baseado no material “Conhecendo o OTDR” da Engenharia/Projetos Click IP, cumprindo todas as fases práticas e sendo aprovado(a) na avaliação final de conhecimentos.';
+ wrapT(par,205,4.3,TXT).forEach((l,i)=>txt(l,148.5,105+i*6,4.3,TXT,'#24304d'));
+ const b=st.best||{s:0},stats=[['Aproveitamento na avaliação',b.s+' de 10 ('+b.s*10+'%)'],['Fases concluídas',Object.keys(st.done).length+' de 7'],['Nível alcançado',nivel()]];
+ stats.forEach((s2,i)=>{const x=55+i*65;ctx.fillStyle='#EEF5F6';ctx.beginPath();ctx.roundRect(mm(x),mm(124),mm(57),mm(18),mm(3));ctx.fill();ctx.fillStyle='#2F8A97';ctx.fillRect(mm(x),mm(124),mm(1.3),mm(18));
+  txt(s2[0],x+29,130.5,3.1,TXT,'#4a5672','center','700');txt(s2[1],x+29,138.5,4.8,TXT,'#0B2149','center','800')});
+ txt('Competências desenvolvidas',148.5,151,3.9,TXT,'#2F8A97','center','800');
+ const comp='Princípio de funcionamento do OTDR  •  Leitura e interpretação de eventos do traço  •  Cálculo de potência do passivo  •  Funções do SmartOTDR  •  Uso das portas APC, APC Live, VFL e USB';
+ wrapT(comp,215,3.4,TXT,'600').forEach((l,i)=>txt(l,148.5,157+i*5,3.4,TXT,'#24304d','center','600'));
+ [[95,'Gilmar Santos','Elaboração do conteúdo · Assistente de Projetos'],[202,'Gabriela Flores','Revisão e aprovação · Supervisora de Projetos']].forEach(a=>{ctx.fillStyle='#0B2149';ctx.fillRect(mm(a[0]-34),mm(177),mm(68),mm(.4));
+  txt(a[1],a[0],183,4.2,TXT,'#0B2149','center','800');txt(a[2],a[0],188.5,3,TXT,'#4a5672','center','600')});
+ txt('Emitido em '+dataExt(st.best&&st.best.d)+'   ·   Código do certificado: '+certCode(),148.5,199,2.9,TXT,'#6b7590','center','600');
+}
+function drawPreview(){const cv=$('#certCv');if(!cv||$('#certOpen').hidden)return;const r=cv.getBoundingClientRect();if(!r.width)return;const d=Math.min(2,window.devicePixelRatio||1);
+ cv.width=Math.round(r.width*d);cv.height=Math.round(r.width*210/297*d);drawCert(cv.getContext('2d'),cv.width,cv.height)}
+function certRender(){const ok=st.best&&st.best.s>=7,done=allDone();$('#certOpen').hidden=!(ok&&done);
+ if(ok&&done){$('#certLock').innerHTML='';$('#certName').value=st.name||'';$('#certPdf').disabled=(st.name||'').trim().length<3;fontsReady.then(drawPreview);return}
+ $('#certLock').innerHTML='<p>O certificado é liberado quando você conclui as 6 fases e acerta pelo menos 7 de 10 no quiz.</p><div class="req">'+NEED.map(f=>'<div class="'+(st.done[f[0]]?'ok':'')+'"><i>'+(st.done[f[0]]?'✓':'')+'</i>'+(st.done[f[0]]?f[1]:'<a class="lnk" href="#'+f[0]+'">'+f[1]+'</a>')+'</div>').join('')+'<div class="'+(ok?'ok':'')+'"><i>'+(ok?'✓':'')+'</i>Quiz com 70% ou mais'+(st.best?' (melhor: '+st.best.s+'/10)':'')+'</div></div>'}
+const fontsReady=(document.fonts?Promise.all([document.fonts.load('40px "Lilita One"'),document.fonts.load('800 20px Nunito'),document.fonts.load('600 20px Nunito'),document.fonts.load('20px Nunito')]).catch(()=>0):Promise.resolve()).then(()=>0);
+$('#certName').addEventListener('input',e=>{st.name=e.target.value.replace(/\s+/g,' ').slice(0,60);save();$('#certPdf').disabled=st.name.trim().length<3;drawPreview()});
+new ResizeObserver(drawPreview).observe($('#certCv'));
+function pdfFromJpeg(jpg,iw,ih){const enc=new TextEncoder();const parts=[];let len=0;const offs=[];
+ const push=x=>{const b=typeof x==='string'?enc.encode(x):x;parts.push(b);len+=b.length};
+ push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'.replace(/[\xE2\xE3\xCF\xD3]/g,'A'));
+ const obj=(n,body)=>{offs[n]=len;push(n+' 0 obj\n');body();push('\nendobj\n')};
+ obj(1,()=>push('<< /Type /Catalog /Pages 2 0 R >>'));
+ obj(2,()=>push('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'));
+ obj(3,()=>push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 841.89 595.28] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>'));
+ obj(4,()=>{push('<< /Type /XObject /Subtype /Image /Width '+iw+' /Height '+ih+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpg.length+' >>\nstream\n');push(jpg);push('\nendstream')});
+ const c='q 841.89 0 0 595.28 0 0 cm /Im0 Do Q';obj(5,()=>push('<< /Length '+c.length+' >>\nstream\n'+c+'\nendstream'));
+ const x=len;let t='xref\n0 6\n0000000000 65535 f \n';for(let i=1;i<=5;i++)t+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+ push(t+'trailer\n<< /Size 6 /Root 1 0 R /Info << /Title (Certificado Academia OTDR - Click IP) /Producer (Academia OTDR) >> >>\nstartxref\n'+x+'\n%%EOF');
+ const out=new Uint8Array(len);let o=0;parts.forEach(p=>{out.set(p,o);o+=p.length});return out}
+async function certPdfBytes(){await fontsReady;const W=3508,H=2480;const cv=document.createElement('canvas');cv.width=W;cv.height=H;drawCert(cv.getContext('2d'),W,H);
+ const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.93));const jpg=new Uint8Array(await blob.arrayBuffer());return pdfFromJpeg(jpg,W,H)}
+window.__certPdf=async()=>{const b=await certPdfBytes();let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(s)};
+let dl=null;
+if(window.claude&&claude.use)claude.use('downloads').then(d=>{dl=d}).catch(()=>{});
+$('#certPdf').addEventListener('click',async()=>{const m=$('#certMsg');m.className='msg';m.textContent='Gerando o PDF…';
+ try{const bytes=await certPdfBytes();
+  const nm='Certificado OTDR - '+(st.name||'aluno').trim().replace(/[^\p{L}\p{N} ]/gu,'').slice(0,40)+'.pdf';
+  if(!dl){const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));const a=document.createElement('a');a.href=url;a.download=nm;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+   m.className='msg ok';m.textContent='Certificado gerado! Se o download não começar, verifique os bloqueios do navegador.';return}
+  await dl.save({filename:nm,data:new Blob([bytes])});m.className='msg ok';m.textContent='Certificado salvo! Abra o PDF para imprimir.'}
+ catch(e){m.className='msg no';m.textContent=e&&e.code==='declined'?'Download cancelado. Clique de novo quando quiser salvar.':e&&e.code==='rate_limited'?'Aguarde um instante e tente de novo.':'Não foi possível salvar o PDF aqui. Tente pelo navegador do computador.'}});
+window.addEventListener('hashchange',()=>{if(location.hash==='#quiz')certRender()});
+certRender();
+
+route();
+}
+</script>
+</body>
+</html>
